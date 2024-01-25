@@ -66,14 +66,11 @@ find_knn <- function(
 
     if(is.null(BNPARAM)) {
 		if(method == 'kmknn') {
-			message("Using method \'kmknn\'")
             knnparam = KmknnParam(distance = distance)
         } else if(method == 'hnsw') {
-			message("Using method \'hnsw\'")
             knnparam = HnswParam(distance = distance)
         }
 	} else {
-		message("Using method \'custom\'")
 		knnparam = BNPARAM
 	}
 
@@ -82,10 +79,7 @@ find_knn <- function(
 	} else {
         knn <- queryKNN(X = data, query = query, k = k, BNPARAM = knnparam)
 	}
-
-    #knn$index = knn$index[, -1L, drop = FALSE]
-    #knn$distance = knn$distance[, -1L, drop = FALSE]
-    
+  
 	# R matrices are column-major, so as.vector(m) == c(m[, 1], m[, 2], ...)
 	knn$dist_mat <- sparseMatrix(
 		rep(seq_len(nrow(knn$index)), k),
