@@ -30,6 +30,7 @@ Imports:
     utils,
     stats,
     Matrix,
+    matrixStats,
     Rcpp (>= 0.10.3),
     RcppEigen,
     RSpectra (>= 0.14-0),
@@ -37,6 +38,7 @@ Imports:
     pcaMethods,
     Biobase,
     BiocGenerics,
+    BiocNeighbors,
     SummarizedExperiment,
     SingleCellExperiment,
     ggplot2,
@@ -121,4 +123,4 @@ Collate:
     'projection-dist.r'
     'rankcor.r'
     'sigmas-plotting.r'
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0

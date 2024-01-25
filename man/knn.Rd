@@ -7,12 +7,12 @@
 find_knn(
   data,
   k,
-  ...,
   query = NULL,
   distance = c("euclidean", "cosine", "rankcor", "l2"),
-  method = c("covertree", "hnsw"),
+  method = c("kmknn", "covertree", "hnsw"),
   sym = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  BNPARAM = NULL
 )
 }
 \arguments{
@@ -20,17 +20,17 @@ find_knn(
 
 \item{k}{Number of nearest neighbors}
 
-\item{...}{Parameters passed to \code{\link[RcppHNSW]{hnsw_knn}}}
-
 \item{query}{Query matrix. Leave it out to use \code{data} as query}
 
 \item{distance}{Distance metric to use. Allowed measures: Euclidean distance (default), cosine distance (\eqn{1-corr(c_1, c_2)}) or rank correlation distance (\eqn{1-corr(rank(c_1), rank(c_2))})}
 
-\item{method}{Method to use. \code{'hnsw'} is tunable with \code{...} but generally less exact than \code{'covertree'} (default: 'covertree')}
+\item{method}{Method to use. \code{'kmknn'} and \code{'covertree'} are exact methods; \code{'hnsw'} is approximate. (default: kmknn)}
 
 \item{sym}{Return a symmetric matrix (as long as query is NULL)?}
 
 \item{verbose}{Show a progressbar? (default: FALSE)}
+
+\item{BNPARAM}{A \code{\link[BiocNeighbors]{BiocNeighborParam}} object specifying the algorithm to use. This can be left empty if \code{'method'} is specified.}
 }
 \value{
 A \code{\link{list}} with the entries:

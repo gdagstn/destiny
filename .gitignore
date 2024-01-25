@@ -17,3 +17,4 @@ __pycache__/
 /vignettes/*.html
 /vignettes/*.R
 /vignettes/*_files/
+.DS_Store

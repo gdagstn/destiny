@@ -5,11 +5,11 @@
 #' @param data      Data matrix
 #' @param query     Query matrix. Leave it out to use \code{data} as query
 #' @param k         Number of nearest neighbors
-#' @param ...       Parameters passed to \code{\link[RcppHNSW]{hnsw_knn}}
 #' @param distance  Distance metric to use. Allowed measures: Euclidean distance (default), cosine distance (\eqn{1-corr(c_1, c_2)}) or rank correlation distance (\eqn{1-corr(rank(c_1), rank(c_2))})
-#' @param method    Method to use. \code{'hnsw'} is tunable with \code{...} but generally less exact than \code{'covertree'} (default: 'covertree')
+#' @param method    Method to use. \code{'kmknn'} and \code{'covertree'} are exact methods; \code{'hnsw'} is approximate. (default: kmknn)
 #' @param sym       Return a symmetric matrix (as long as query is NULL)?
 #' @param verbose   Show a progressbar? (default: FALSE)
+#' @param BNPARAM	A \code{\link[BiocNeighbors]{BiocNeighborParam}} object specifying the algorithm to use. This can be left empty if \code{'method'} is specified.
 #' 
 #' @return A \code{\link{list}} with the entries:
 #' \describe{
@@ -23,49 +23,74 @@
 #' }
 #' 
 #' @rdname knn
-#' @importFrom RcppHNSW hnsw_build hnsw_knn hnsw_search
+#' @importFrom BiocNeighbors findKNN queryKNN HnswParam KmknnParam
+#' @importFrom matrixStats colRanks
 #' @export
 find_knn <- function(
 	data, k,
-	...,
 	query = NULL,
 	distance = c('euclidean', 'cosine', 'rankcor', 'l2'),
-	method = c('covertree', 'hnsw'),
+	method = c('kmknn', 'covertree', 'hnsw'),
 	sym = TRUE,
-	verbose = FALSE
+	verbose = FALSE,
+	BNPARAM = NULL
 ) {
-	p <- utils::modifyList(formals(RcppHNSW::hnsw_knn), list(...))
-	method <- match.arg(method)
+	#p <- utils::modifyList(formals(RcppHNSW::hnsw_knn), list(...))
+	if(!is.null(method)) {
+		method <- match.arg(method)
+	} else if(is.null(method) & is.null(BNPARAM)) {
+		stop('You must either specify a method or a BNPARAM')
+	} 
+
 	distance <- match.arg(distance)
-	if (!is.double(data)) {
-		warning('find_knn does not yet support sparse matrices, converting data to a dense matrix.')
-		data <- as.matrix(data)
-	}
-	if (method == 'covertree') {
-		return(knn.covertree::find_knn(data, k, query = query, distance = distance, sym = sym))
+
+	if(!is.null(method)) {
+		if (!is.double(data) & method == 'covertree') {	
+			warning('find_knn does not yet support sparse matrices, converting data to a dense matrix.')
+			data <- as.matrix(data)
+		}
+		if (method == 'covertree') {
+			message("Using method \'covertree\'")
+			return(knn.covertree::find_knn(data, k, query = query, distance = distance, sym = sym))
+		}
 	}
 	
 	if (distance == 'rankcor') {
-		# TODO: rank_mat only works on dense matrices
 		distance <- 'cosine'
-		data <- rank_mat(data)
-		if (!is.null(query)) query <- rank_mat(query)
+		data <- t(colRanks(data, ties.method = "random", preserveShape = FALSE, decreasing = TRUE))
+		if (!is.null(query)) query <- colRanks(query)
 	}
 	
-	if (is.null(query)) {
-		knn <- hnsw_knn(data, k + 1L, distance, M = p$M, ef_construction = p$ef_construction, ef = p$ef, verbose = verbose)
-		knn$idx  <- knn$idx[ , -1, drop = FALSE]
-		knn$dist <- knn$dist[, -1, drop = FALSE]
+    dchar = unlist(strsplit(distance, ''))
+    distance <- paste0(toupper(dchar[1L]), paste0(dchar[-1L], collapse = ''))
+
+    if(is.null(BNPARAM)) {
+		if(method == 'kmknn') {
+			message("Using method \'kmknn\'")
+            knnparam = KmknnParam(distance = distance)
+        } else if(method == 'hnsw') {
+			message("Using method \'hnsw\'")
+            knnparam = HnswParam(distance = distance)
+        }
 	} else {
-		index <- hnsw_build(data, distance, M = p$M, ef = p$ef_construction, verbose = verbose)
-		knn <- hnsw_search(query, index, k, ef = p$ef, verbose = verbose)
+		message("Using method \'custom\'")
+		knnparam = BNPARAM
 	}
-	names(knn)[[1L]] <- 'index'  # idx -> index
+
+	if (is.null(query)) {
+        knn <- findKNN(X = data, k = k, BNPARAM = knnparam)
+	} else {
+        knn <- queryKNN(X = data, query = query, k = k, BNPARAM = knnparam)
+	}
+
+    #knn$index = knn$index[, -1L, drop = FALSE]
+    #knn$distance = knn$distance[, -1L, drop = FALSE]
+    
 	# R matrices are column-major, so as.vector(m) == c(m[, 1], m[, 2], ...)
 	knn$dist_mat <- sparseMatrix(
 		rep(seq_len(nrow(knn$index)), k),
 		as.vector(knn$index),
-		x = as.vector(knn$dist),
+		x = as.vector(knn$distance),
 		dims = c(nrow(if (is.null(query)) data else query), nrow(data))
 	)
 	if (is.null(query)) {
@@ -74,8 +99,9 @@ find_knn <- function(
 	} else {
 		nms <- rownames(query)
 	}
-	rownames(knn$dist_mat) <- rownames(knn$index) <- rownames(knn$dist) <- nms
+	rownames(knn$dist_mat) <- rownames(knn$index) <- rownames(knn$distance) <- nms
 	colnames(knn$dist_mat) <- rownames(data)
+	names(knn)[2] <- 'dist'
 	knn
 }
 

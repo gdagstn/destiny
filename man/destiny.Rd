@@ -2,6 +2,7 @@
 % Please edit documentation in R/destiny-package.r
 \docType{package}
 \name{destiny}
+\alias{destiny-package}
 \alias{destiny}
 \title{Create and plot diffusion maps}
 \description{
@@ -9,5 +10,30 @@ The main function is \code{\link{DiffusionMap}}, which returns an object you can
 }
 \examples{
 demo(destiny, ask = FALSE)
+
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://theislab.github.io/destiny/}
+  \item \url{https://github.com/theislab/destiny/}
+  \item \url{https://www.helmholtz-muenchen.de/icb/destiny}
+  \item \url{https://bioconductor.org/packages/destiny}
+  \item \doi{10.1093/bioinformatics/btv715}
+  \item Report bugs at \url{https://github.com/theislab/destiny/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Philipp Angerer \email{phil.angerer@gmail.com} (\href{https://orcid.org/0000-0002-0369-2888}{ORCID})
+
+Other contributors:
+\itemize{
+  \item Laleh Haghverdi \email{laleh.haghverdi@helmholtz-muenchen.de} [contributor]
+  \item Maren Büttner \email{maren.buettner@helmholtz-muenchen.de} (\href{https://orcid.org/0000-0002-6189-3792}{ORCID}) [contributor]
+  \item Fabian Theis \email{fabian.theis@helmholtz-muenchen.de} (\href{https://orcid.org/0000-0002-2419-1943}{ORCID}) [contributor]
+  \item Carsten Marr \email{carsten.marr@helmholtz-muenchen.de} (\href{https://orcid.org/0000-0003-2154-4552}{ORCID}) [contributor]
+  \item Florian Büttner \email{f.buettner@helmholtz-muenchen.de} (\href{https://orcid.org/0000-0001-5587-6761}{ORCID}) [contributor]
+}
 
 }

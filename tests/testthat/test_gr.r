@@ -20,6 +20,6 @@ test_that('Gene Relevance returns the right genes', {
 	dm <- DiffusionMap(test_data, distance = 'rankcor')
 	gr <- gene_relevance(dm,  smooth = FALSE)
 	gr_plot <- plot_gene_relevance(gr, iter_smooth = 0, n_top = 1)
-	skip('Not yet stable')
+	#skip('Not yet stable')
 	expect_identical(gr_plot$ids[1:2], c('D', 'C'))
 })
